@@ -1,4 +1,5 @@
 import openpyxl
+from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from datetime import datetime, timedelta
 from openpyxl.styles import PatternFill
@@ -15,7 +16,7 @@ workbook = openpyxl.load_workbook('File.xlsx')
 worksheet = workbook.active
 
 # Set the yellow fill style
-yellow_fill = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')
+lightBlue_fill = PatternFill(start_color='ADD8E6', end_color='ADD8E6', fill_type='solid')
 
 # Determine the column to insert before
 column_letter = openpyxl.utils.get_column_letter(1)
@@ -63,9 +64,9 @@ while worksheet.cell(row, 1).value:
         worksheet.cell(row, 1).value = "."
 
         # Loop through all cells in the row
-        for cell in worksheet[row]:
+        #for cell in worksheet[row]:
             # Set the fill color to yellow
-            cell.fill = openpyxl.styles.PatternFill(start_color="000000", end_color="000000", fill_type="solid")
+            # cell.fill = openpyxl.styles.PatternFill(start_color="000000", end_color="000000", fill_type="solid")
         date = current_date
 
     # Move to the next row
@@ -111,7 +112,7 @@ def rowColors():
             last_row.font = font
 
 
-rowColors()
+# rowColors()
 
 # Get the column dimensions
 column_dim = worksheet.column_dimensions["B"]
@@ -120,7 +121,6 @@ column_dim = worksheet.column_dimensions["B"]
 column_dim.width = max(len(str(cell.value)) for cell in worksheet["B"])
 
 
-# Round the time in Column B to the nearest minute
 def round_column_b():
     # Iterate through the rows of the worksheet
     for row in worksheet.iter_rows(min_row=2, max_col=2, max_row=worksheet.max_row, values_only=True):
@@ -161,7 +161,6 @@ def round_column_b():
         row[0].value = value
 
 
-# Round the time in Column C to the nearest minute
 def round_column_c():
     # Iterate through the rows of the worksheet
     for row in worksheet.iter_rows(min_row=2, max_col=4, max_row=worksheet.max_row, values_only=True):
@@ -330,8 +329,9 @@ def Duration():
         row[7].value = duration_str
 
 
-
 # Set the starting location
+
+
 def Location():
     # Loop through each row
     last_location = worksheet['I1'].value
@@ -339,11 +339,12 @@ def Location():
     for row in range(2, worksheet.max_row + 1):
         current_location = worksheet.cell(row=row, column=9).value
 
-        # If the location changes, insert a new row and apply the yellow fill
+        # If the location changes, insert a new row and apply the light blue fill
         if current_location and current_location != last_location:
             worksheet.insert_rows(row)
             for col in range(1, worksheet.max_column + 1):
-                worksheet.cell(row=row, column=col).fill = yellow_fill
+                worksheet.cell(row=row, column=col).value = ","
+                worksheet.cell(row=row, column=col).fill = lightBlue_fill
             last_location = current_location
 
 
@@ -374,133 +375,11 @@ def changeCells():
         fill_color = worksheet.cell(row=row, column=8).fill.start_color.index
 
         # If the current row's fill color is not yellow and the previous row's fill color is yellow, change the fill color of the cell in column H to red
-        if fill_color != yellow_fill.start_color.index and prev_fill_color == yellow_fill.start_color.index:
-            worksheet.cell(row=row, column=7).fill = red_fill
+        # if fill_color != yellow_fill.start_color.index and prev_fill_color == yellow_fill.start_color.index:
+        #     worksheet.cell(row=row, column=7).fill = red_fill
 
-        # Update the previous row's fill color
-        prev_fill_color = fill_color
-
-
-def newSheet():
-    # Define the fill color for black fill rows
-    black_fill = PatternFill(start_color='000000', end_color='000000', fill_type='solid')
-
-    # Define the starting row for moving data
-    start_row = None
-
-    # Loop through all the rows in the worksheet
-    for row in worksheet.iter_rows(min_row=1, max_col=1, max_row=worksheet.max_row):
-        # Check if the cell in column A has black fill
-        if row[0].fill == black_fill:
-            # If this is the first black fill row, set the starting row for moving data
-            if start_row is None:
-                start_row = row[0].row
-            # Otherwise, copy the data to a new sheet
-            else:
-                # Create a new sheet to move the data to
-                new_sheet = workbook.create_sheet('New Sheet')
-                # Get the rows to copy to the new sheet
-                rows_to_copy = worksheet.iter_rows(min_row=start_row, max_row=row[0].row - 1, max_col=worksheet.max_column)
-                # Copy the rows to the new sheet
-                for row_to_copy in rows_to_copy:
-                    new_sheet.append([cell.value for cell in row_to_copy])
-                # Set the starting row for moving data to the next row after the current black fill row
-                start_row = row[0].row + 1
-
-    # If there are still rows to move after the last black fill row, copy them to a new sheet
-    if start_row is not None and start_row <= worksheet.max_row:
-        new_sheet = workbook.create_sheet('New Sheet')
-        rows_to_copy = worksheet.iter_rows(min_row=start_row, max_row=worksheet.max_row, max_col=worksheet.max_column)
-        for row_to_copy in rows_to_copy:
-            new_sheet.append([cell.value for cell in row_to_copy])
-
-def hideColAllSheets():
-    sheets = workbook.sheetnames
-
-    # Specify which columns to hide (in this example, columns B and D)
-    columns_to_hide = ['B', 'C', 'D', 'E', 'J', 'K', 'L', 'M', 'O', 'P', 'Q']
-
-    # Loop through all sheets and hide the specified columns
-    for sheet_name in sheets:
-        sheet = workbook[sheet_name]
-        for column in columns_to_hide:
-            sheet.column_dimensions[column].hidden = True
-
-
-def removeYellow():
-    black_fill = PatternFill(start_color='000000', end_color='000000', fill_type='solid')
-    yellow_fill = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')
-
-    black_row = None
-
-    for row in worksheet.iter_rows():
-        if row[0].fill == black_fill:
-            black_row = row[0].row
-        elif row[0].fill == yellow_fill and black_row and row[0].row > black_row:
-            worksheet.delete_rows(row[0].row)
-
-def yellowToBlack():
-    black_fill = PatternFill(start_color='000000', end_color='000000', fill_type='solid')
-    yellow_fill = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')
-
-    if worksheet['A2'].fill == yellow_fill:
-        for colu in range(1, 18):
-            worksheet.cell(row=2, column=colu).fill = black_fill
-
-    empty_row = None
-
-    for row in range(1, worksheet.max_row + 1):
-        if not worksheet.cell(row=row, column=1).value:
-            empty_row = row
-            break
-
-    if empty_row:
-        for col in range(1, 18):
-            worksheet.cell(row=empty_row, column=col).fill = black_fill
-
-def lastRow():
-    last_row = worksheet.max_row
-    print(last_row)
-    last_row_with_value = None
-
-    for row in range(last_row, 0, -1):
-        if not last_row_with_value:
-            for col in range(1, worksheet.max_column + 1):
-                cell_value = worksheet.cell(row=row, column=col).value
-                if cell_value:
-                    last_row_with_value = row
-                    black_fill = PatternFill(start_color='000000', end_color='000000', fill_type='solid')
-
-                    # Define the row to change the fill color for
-                    row_number = last_row_with_value + 1
-                    print(f"Row to change is {row}")
-                    # Loop through the cells in the row and set the fill color
-                    for column in range(1, 19):  # Columns A to R
-                        cell = worksheet.cell(row=row_number, column=column)
-                        cell.fill = black_fill
-                    break
-    # Define the fill color for the cells
-
-    print(f"The last row with a value is {last_row_with_value}")
-
-
-
-def hideColumns():
-    worksheet.column_dimensions['B'].hidden = True
-    worksheet.column_dimensions['C'].hidden = True
-    worksheet.column_dimensions['D'].hidden = True
-    worksheet.column_dimensions['E'].hidden = True
-    worksheet.column_dimensions['J'].hidden = True
-    worksheet.column_dimensions['K'].hidden = True
-    worksheet.column_dimensions['L'].hidden = True
-    worksheet.column_dimensions['M'].hidden = True
-    worksheet.column_dimensions['O'].hidden = True
-    worksheet.column_dimensions['P'].hidden = True
-    worksheet.column_dimensions['Q'].hidden = True
-
-
-
-
+        # # Update the previous row's fill color
+        # prev_fill_color = fill_color
 
 
 round_column_b()
@@ -508,15 +387,77 @@ round_column_c()
 startZ_column_f()
 endZ_column_g()
 Duration()
-Location()
+# Location()
 # deleteExtraYellow()
-changeCells()
-newSheet()
-removeYellow()
-yellowToBlack()
-hideColumns()
-lastRow()
-hideColAllSheets()
+
 
 # Save the changes
 workbook.save('existing_file.xlsx')
+
+# load the workbook and select the active worksheet
+wb = load_workbook('existing_file.xlsx')
+ws = wb.active
+
+# loop through each row in the worksheet and convert the time values in columns F and G
+for row in ws.iter_rows(min_row=2, min_col=6, max_col=7):
+    for cell in row:
+        # check if the cell value is not empty or None
+        if cell.value is not None and cell.value != '':
+            try:
+                # try to parse the cell value as a time string in HH:MM:SS format
+                datetime_obj = datetime.strptime(cell.value, '%H:%M:%S')
+                # format the datetime object as a string in HH:MM format
+                cell.value = datetime_obj.strftime('%H:%M')
+            except ValueError:
+                # if the cell value is not in HH:MM:SS format, set the cell value to an empty string
+                cell.value = ''
+        else:
+            # if the cell value is empty or None, set the cell value to an empty string
+            cell.value = ''
+
+# set the red fill style
+red_fill = PatternFill(start_color='FFFF0001', end_color='FFFF0000', fill_type='solid')
+
+# loop through each row in the worksheet and check the value of column D
+for row in ws.iter_rows(min_row=2, min_col=6, max_col=6):
+    for cell in row:
+        # check if the cell value is "."
+        if cell.value == ".":
+            # change the fill color of the previous cell to red
+            cell.offset(row=-1, column=0).fill = red_fill
+            cell.offset(row=2, column=1).fill = red_fill
+
+# loop through each row in the worksheet
+for row in ws.iter_rows(min_row=2):
+    # check if the color of the previous row is black
+    if row[0].offset(row=-1).fill.start_color.index == 'FF000000':
+        # check if the color of the current row is yellow
+        if row[0].fill.start_color.index == 'FFFFFF00':
+            # delete the row
+            ws.delete_rows(row[0].row)
+
+# define the range of columns to hide
+start_col = 2  # column A
+end_col = 5  # column C
+
+# loop through each column in the range
+for col in range(start_col, end_col + 1):
+    col_letter = get_column_letter(col)
+    ws.column_dimensions[col_letter].hidden = True
+
+# define the range of columns to hide
+start_col = 11  # column A
+end_col = 17  # column C
+
+# loop through each column in the range
+for col in range(start_col, end_col + 1):
+    col_letter = get_column_letter(col)
+    ws.column_dimensions[col_letter].hidden = True
+
+ws.column_dimensions['I'].auto_size = True
+
+
+# save the updated workbook
+wb.save('Processed.xlsx')
+
+
